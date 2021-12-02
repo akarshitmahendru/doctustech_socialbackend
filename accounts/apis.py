@@ -122,3 +122,45 @@ class SearchUsersAPI(generics.ListAPIView):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', 'last_name', 'email',)
 
+
+class InvitationAPI(generics.CreateAPIView):
+    model = models.FriendRequests
+    serializer_class = serializers.InvitationSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            source = self.request.user
+            target = models.User.objects.filter(id=serializer.validated_data.pop("target_id")).first()
+            serializer.save(source=source, target=target)
+            # if action == "accept":
+            #     source.friends.add(target)
+            #     target.friends.add(source)
+            #     source.save()
+            #     target.save()
+            #     obj.status = "accepted"
+            #     obj.save()
+            # else:
+            #     if action == "reject":
+            #         obj.status = "rejected"
+            #         obj.save()
+            return response.Response({"msg": "Friend request successfully sent"},
+                                     status=status.HTTP_200_OK
+                                     )
+
+        else:
+            return response.Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class MyFriendRequests(generics.ListAPIView):
+    serializer_class = serializers.MyFriendRequestsSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return models.FriendRequests.objects.filter(target=user, status="sent")
+

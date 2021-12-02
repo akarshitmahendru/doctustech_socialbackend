@@ -192,9 +192,10 @@ class FriendRequests(models.Model):
         null=True,
         blank=True
     )
-    requested_date = models.DateField(
+    requested_date = models.DateTimeField(
         blank=True,
-        null=True
+        null=True,
+        default=timezone.now
     )
     status = models.CharField(
         max_length=50,

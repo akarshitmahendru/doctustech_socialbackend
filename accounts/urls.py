@@ -13,4 +13,6 @@ urlpatterns = [
     url(r'^logout/$', apis.LogOutView.as_view(), name='logout'),
     url(r'^user-info/$', apis.UserInfo.as_view(), name='user-info'),
     url(r'^search-users/$', apis.SearchUsersAPI.as_view(), name='search'),
+    url(r'^send-request/$', apis.InvitationAPI.as_view(), name='invitation'),
+    url(r'^my-requests/$', apis.MyFriendRequests.as_view(), name='requests'),
 ]

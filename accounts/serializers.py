@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from django.utils import timezone
 from rest_framework import serializers, exceptions
 import django.contrib.auth.password_validation as validators
-from accounts.models import User, UserOtp
+from accounts.models import User, UserOtp, FriendRequests
 from helpers.serializer_fields import CustomEmailSerializerField
 
 
@@ -128,4 +128,44 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 self.error_messages['invalid_credentials'])
         return attrs
+
+
+class MyFriendRequestsSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+
+    def get_full_name(self, obj):
+        try:
+            return obj.source.get_full_name()
+        except:
+            return None
+
+    def get_avatar(self, obj):
+        try:
+            return obj.source.avatar.url
+        except:
+            return None
+
+    class Meta:
+        model = FriendRequests
+        fields = ("id", "full_name", "avatar", "status")
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    target_id = serializers.IntegerField(
+        required=True,
+        allow_null=False
+    )
+
+    def validate_target_id(self, target_id):
+        if not User.objects.filter(id=target_id, is_active=True).exists():
+            raise serializers.ValidationError(
+                "User does not exists"
+            )
+        else:
+            return target_id
+
+    class Meta:
+        model = FriendRequests
+        fields = ("target_id",)
 
