@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,6 +30,13 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+LOCAL_APPS = []
+
+THIRD_PARTY_APPS = [
+    'rest_framework',
+    'drf_yasg'
+]
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,7 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 ]
+
+INSTALLED_APPS += LOCAL_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,10 +85,16 @@ WSGI_APPLICATION = 'doctustech.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': "doctustech_db",
+        'USER': "sqldev",
+        'PASSWORD': "sqlpass",
+        'HOST': "localhost",
+        'PORT': 5432
     }
 }
+
+DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
 # Password validation
@@ -118,3 +134,43 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+######################## REST FRAMEWORK SETTINGS #############################
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+#      'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#     ],
+#     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_jwt.authentication.JSONWebTokenAuthentication',),
+}
+
+
+SWAGGER_SETTINGS = {
+    "exclude_namespaces": [],
+    "enabled_methods": [
+        'get',
+        'post',
+        'put',
+        'patch',
+        'delete'
+    ],
+    "api_key": '',  # An API key
+
+    "is_authenticated": False,
+    "is_superuser": False,
+    'SECURITY_DEFINITIONS': {
+        "access_token": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        },
+}
+}
