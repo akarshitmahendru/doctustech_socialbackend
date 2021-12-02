@@ -30,7 +30,9 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-LOCAL_APPS = []
+LOCAL_APPS = [
+'accounts',
+]
 
 THIRD_PARTY_APPS = [
     'rest_framework',
@@ -68,7 +70,7 @@ ROOT_URLCONF = 'doctustech.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -134,6 +136,8 @@ USE_L10N = True
 USE_TZ = True
 
 LOGIN_URL = '/admin/login/'
+APPLICATION_NAME = 'DoctusTech'
+AUTH_USER_MODEL = 'accounts.User'
 
 
 # Static files (CSS, JavaScript, Images)
@@ -142,6 +146,11 @@ LOGIN_URL = '/admin/login/'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = "fytme.flutter@gmail.com"
+SESSION_IDLE_TIMEOUT= 900
+USER_TOKEN_EXPIRES = 1
 
 ######################## REST FRAMEWORK SETTINGS #############################
 
@@ -152,10 +161,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
-#      'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticated',
-#     ],
-#     'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_jwt.authentication.JSONWebTokenAuthentication',),
+    'DEFAULT_AUTHENTICATION_CLASSES': ('oauth2_provider.contrib.rest_framework.OAuth2Authentication',),
 }
 
 

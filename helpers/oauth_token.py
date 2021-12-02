@@ -18,19 +18,23 @@ class UserAccessToken(object):
         scopes = 'read write'
         application = Application.objects.get(name=self.app_name)
         expires = timezone.now() + timezone.timedelta(days=settings.USER_TOKEN_EXPIRES)
-        access_token = AccessToken.objects.create(
-            user=self.user,
-            token=random_token_generator(self.request),
-            application=application,
-            expires=expires,
-            scope=scopes)
+        access_token = AccessToken.objects.filter(user=self.user, expires__lte=expires).first()
+        if not access_token:
+            access_token = AccessToken.objects.create(
+                user=self.user,
+                token=random_token_generator(self.request),
+                application=application,
+                expires=expires,
+                scope=scopes)
 
-        RefreshToken.objects.create(
-            user=self.user,
-            token=random_token_generator(self.request),
-            access_token=access_token,
-            application=application
-        )
-
+            RefreshToken.objects.create(
+                user=self.user,
+                token=random_token_generator(self.request),
+                access_token=access_token,
+                application=application
+            )
         return access_token
+
+    def revoke_oauth_tokens(self):
+        AccessToken.objects.filter(user=self.user).update(expires=timezone.now())
 
