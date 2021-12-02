@@ -162,5 +162,5 @@ class MyFriendRequests(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return models.FriendRequests.objects.filter(target=user, status="sent")
+        return models.FriendRequests.objects.filter(target=user, status="sent").order_by("-requested_date", "-id")
 

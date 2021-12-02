@@ -148,7 +148,7 @@ class MyFriendRequestsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FriendRequests
-        fields = ("id", "full_name", "avatar", "status")
+        fields = ("id", "full_name", "avatar", "status", "requested_date")
 
 
 class InvitationSerializer(serializers.ModelSerializer):
