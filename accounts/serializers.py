@@ -1,6 +1,7 @@
 import re
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers, exceptions
 import django.contrib.auth.password_validation as validators
@@ -169,3 +170,22 @@ class InvitationSerializer(serializers.ModelSerializer):
         model = FriendRequests
         fields = ("target_id",)
 
+
+class InvitationActionSerializer(serializers.Serializer):
+    action_choice_field = [
+        ("accept", "Accept"),
+        ("reject", "Reject")
+    ]
+    invitation_id = serializers.IntegerField(required=True, allow_null=False)
+    action = serializers.ChoiceField(
+        choices=action_choice_field,
+    )
+
+    def validate_invitation_id(self, obj):
+        if not FriendRequests.objects.filter(id=obj):
+            raise serializers.ValidationError('Given Request doesnot exists')
+        if FriendRequests.objects.filter(Q(status='accepted') | Q(status='rejected'),
+                                         id=obj):
+            raise serializers.ValidationError('You have already taken action on this '
+                                              'Friend Request')
+        return obj

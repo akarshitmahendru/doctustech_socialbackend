@@ -102,44 +102,54 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.name
 
     def send_verification_email(self, request):
-        subject = _('Verify your Email address')
-        from_email = settings.DEFAULT_FROM_EMAIL
-        to = self.email
-        otp_code = random.randint(11111, 99999)
-        data = {
-            'user': self,
-            'otp': otp_code,
-        }
         try:
-            user_otp = UserOtp.objects.filter(user=self)
-            user_otp.delete()
-            user_otp = UserOtp.objects.create(**data)
-        except UserOtp.DoesNotExist:
-            user_otp = UserOtp.objects.create(**data)
-        otp = user_otp.get_otp()
-        ctx = {
-            'email': to,
-            'otp_code': otp,
-        }
-        text_content = render_to_string('otp.txt', ctx)
-        html_content = render_to_string('otp.html', ctx)
+            subject = _('Verify your Email address')
+            from_email = settings.DEFAULT_FROM_EMAIL
+            to = self.email
+            otp_code = random.randint(11111, 99999)
+            data = {
+                'user': self,
+                'otp': otp_code,
+            }
+            try:
+                user_otp = UserOtp.objects.filter(user=self)
+                user_otp.delete()
+                user_otp = UserOtp.objects.create(**data)
+            except UserOtp.DoesNotExist:
+                user_otp = UserOtp.objects.create(**data)
+            otp = user_otp.get_otp()
+            ctx = {
+                'email': to,
+                'otp_code': otp,
+            }
+            text_content = render_to_string('otp.txt', ctx)
+            html_content = render_to_string('otp.html', ctx)
 
-        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
-        msg.attach_alternative(html_content, 'text/html')
-        msg.send()
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+            msg.attach_alternative(html_content, 'text/html')
+            msg.send()
+        except Exception as e:
+            logger.error(("There was an error sending the verification email "
+                          "\nException: {}").format(e))
+            raise e
 
     def get_user_access_token(self, revoke=False):
-        token_application_name = settings.APPLICATION_NAME
-        user_access_token = UserAccessToken(self, self, token_application_name)
-        if revoke:
-            user_access_token.revoke_oauth_tokens()
-            return
-        else:
-            access_token = user_access_token.create_oauth_token()
-            access_token = access_token.token
-            self.last_login = timezone.now()
-            self.save()
-            return access_token
+        try:
+            token_application_name = settings.APPLICATION_NAME
+            user_access_token = UserAccessToken(self, self, token_application_name)
+            if revoke:
+                user_access_token.revoke_oauth_tokens()
+                return
+            else:
+                access_token = user_access_token.create_oauth_token()
+                access_token = access_token.token
+                self.last_login = timezone.now()
+                self.save()
+                return access_token
+        except Exception as e:
+            logger.error(("There was an error creating an token for a "
+                          "user.\nException: {}").format(e))
+            raise e
 
 
 class UserOtp(models.Model):

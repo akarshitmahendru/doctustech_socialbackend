@@ -134,17 +134,6 @@ class InvitationAPI(generics.CreateAPIView):
             source = self.request.user
             target = models.User.objects.filter(id=serializer.validated_data.pop("target_id")).first()
             serializer.save(source=source, target=target)
-            # if action == "accept":
-            #     source.friends.add(target)
-            #     target.friends.add(source)
-            #     source.save()
-            #     target.save()
-            #     obj.status = "accepted"
-            #     obj.save()
-            # else:
-            #     if action == "reject":
-            #         obj.status = "rejected"
-            #         obj.save()
             return response.Response({"msg": "Friend request successfully sent"},
                                      status=status.HTTP_200_OK
                                      )
@@ -156,11 +145,43 @@ class InvitationAPI(generics.CreateAPIView):
             )
 
 
-class MyFriendRequests(generics.ListAPIView):
-    serializer_class = serializers.MyFriendRequestsSerializer
+class MyFriendRequests(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    model = models.FriendRequests
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return serializers.InvitationActionSerializer
+        else:
+            return serializers.MyFriendRequestsSerializer
 
     def get_queryset(self):
         user = self.request.user
-        return models.FriendRequests.objects.filter(target=user, status="sent").order_by("-requested_date", "-id")
+        return self.model.objects.filter(target=user, status="sent").order_by("-requested_date", "-id")
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            action = serializer.validated_data.pop("action")
+            obj = self.model.objects.filter(id=serializer.validated_data.pop("invitation_id")).first()
+            if action == "accept":
+                obj.source.friends.add(obj.target)
+                obj.target.friends.add(obj.source)
+                obj.source.save()
+                obj.target.save()
+                obj.status = "accepted"
+                obj.save()
+            else:
+                obj.status = "rejected"
+                obj.save()
+            return response.Response({"msg": "Action successfully taken on friend request."},
+                                     status=status.HTTP_200_OK
+                                     )
+        else:
+            return response.Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
