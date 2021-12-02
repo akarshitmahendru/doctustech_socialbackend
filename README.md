@@ -36,3 +36,6 @@ python manage.py createsuperuser
  After completion:
     
  Go to http://127.0.0.1:8000/o/applications/register/ and register the application by the name of DoctusTech to enable the OAuth Authentication
+ 
+ 
+All the Endpoints of the project are listed at http://127.0.0.1:8000/docs/
