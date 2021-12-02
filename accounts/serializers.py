@@ -85,7 +85,8 @@ class VerifyOTPSerializer(serializers.Serializer):
 class UserGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "name", "last_name", "email")
+        fields = ("id", "name", "last_name", "email", "avatar")
+        read_only_fields = ("id", "email")
 
 
 class LoginSerializer(serializers.Serializer):
@@ -127,3 +128,4 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 self.error_messages['invalid_credentials'])
         return attrs
+

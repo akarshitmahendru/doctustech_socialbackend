@@ -18,7 +18,7 @@ class UserAccessToken(object):
         scopes = 'read write'
         application = Application.objects.get(name=self.app_name)
         expires = timezone.now() + timezone.timedelta(days=settings.USER_TOKEN_EXPIRES)
-        access_token = AccessToken.objects.filter(user=self.user, expires__lte=expires).first()
+        access_token = AccessToken.objects.filter(user=self.user, expires__gt=timezone.now()).first()
         if not access_token:
             access_token = AccessToken.objects.create(
                 user=self.user,

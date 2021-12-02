@@ -79,6 +79,42 @@ class LogOutView(views.APIView):
         )
 
 
+class UserInfo(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+    def get_serializer_class(self):
+        return serializers.UserGetSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+        return response.Response({"msg": "Your Account has been successfully closed"})
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer_class()
+        serializer = serializer(data=request.data,
+                                instance=instance,
+                                partial=partial,
+                                )
+
+        if serializer.is_valid(raise_exception=True):
+            self.perform_update(serializer)
+            return response.Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        else:
+            return response.Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class SearchUsersAPI(generics.ListAPIView):
     queryset = models.User.objects.filter(is_active=True)
     permission_classes = (permissions.IsAuthenticated,)

@@ -11,5 +11,6 @@ urlpatterns = [
     url(r'^verify-otp/$', apis.VerifyOTPView.as_view(), name='verify'),
     url(r'^login/$', apis.LoginView.as_view(), name='login'),
     url(r'^logout/$', apis.LogOutView.as_view(), name='logout'),
+    url(r'^user-info/$', apis.UserInfo.as_view(), name='user-info'),
     url(r'^search-users/$', apis.SearchUsersAPI.as_view(), name='search'),
 ]
