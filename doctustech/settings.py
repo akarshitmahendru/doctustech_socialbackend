@@ -31,7 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 LOCAL_APPS = [
-'accounts',
+    'accounts',
+    'social_feed'
 ]
 
 THIRD_PARTY_APPS = [

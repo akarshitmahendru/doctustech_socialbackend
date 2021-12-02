@@ -37,6 +37,7 @@ schema_view = get_schema_view(
 apis = [
     url(r'^admin/', admin.site.urls),
     url(r'^api/v1/', include("accounts.urls")),
+    url(r'^api/v1/', include("social_feed.urls")),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 ]
 
