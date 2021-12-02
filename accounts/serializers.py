@@ -1,5 +1,6 @@
 import re
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.utils import timezone
 from rest_framework import serializers, exceptions
 import django.contrib.auth.password_validation as validators
@@ -85,3 +86,44 @@ class UserGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "name", "last_name", "email")
+
+
+class LoginSerializer(serializers.Serializer):
+    """
+       serializer for login view
+    """
+    email = CustomEmailSerializerField(
+        required=True,
+        allow_null=False
+    )
+    password = serializers.CharField(
+        style={'input_type': 'password'},
+    )
+
+    default_error_messages = {
+        'inactive_account': "Your account is inactive. Please verify your email to activate your account.",
+        'invalid_credentials': "Your credentials do not match.",
+        'invalid_account': "User does not exists"
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(LoginSerializer, self).__init__(*args, **kwargs)
+        self.user = None
+
+    def validate(self, attrs):
+        try:
+            user = User.objects.filter(email=attrs['email']).first()
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                self.error_messages['invalid_account']
+            )
+        if user and not user.is_active:
+            raise serializers.ValidationError(
+                self.error_messages['inactive_account']
+            )
+        self.user = authenticate(username=attrs.get(User.USERNAME_FIELD),
+                                 password=attrs.get('password'))
+        if not self.user:
+            raise serializers.ValidationError(
+                self.error_messages['invalid_credentials'])
+        return attrs

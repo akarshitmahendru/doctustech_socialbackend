@@ -1,4 +1,5 @@
-from rest_framework import generics, response, status, permissions, filters
+from django.contrib.auth import user_logged_in
+from rest_framework import generics, response, status, permissions, filters, views
 from . import serializers, models
 
 
@@ -40,8 +41,46 @@ class VerifyOTPView(generics.CreateAPIView):
             return response.Response(response_dict, status=status.HTTP_200_OK)
 
 
+class LoginView(generics.GenericAPIView):
+    """ Api for the user login """
+
+    serializer_class = serializers.LoginSerializer
+    permission_classes = (
+        permissions.AllowAny,
+    )
+
+    def post(self, request, *args, **kwargs):
+        """
+        login api
+        """
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.user  # take the user from serializer objects
+            user_logged_in.send(
+                sender=user.__class__, request=self.request, user=user)
+            response_dict = dict()
+            response_dict['auth_token'] = user.get_user_access_token()
+            response_dict['user_id'] = user.id
+            return response.Response(
+                data=response_dict,
+                status=status.HTTP_200_OK,
+            )
+
+
+class LogOutView(views.APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        user.get_user_access_token(revoke=True)
+        return response.Response(
+            {"msg": "You have been successfully logged out"},
+            status=status.HTTP_200_OK
+        )
+
+
 class SearchUsersAPI(generics.ListAPIView):
-    queryset = models.User.objects.all()
+    queryset = models.User.objects.filter(is_active=True)
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.UserGetSerializer
     filter_backends = (filters.SearchFilter,)

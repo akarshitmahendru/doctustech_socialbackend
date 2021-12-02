@@ -128,14 +128,18 @@ class User(AbstractBaseUser, PermissionsMixin):
         msg.attach_alternative(html_content, 'text/html')
         msg.send()
 
-    def get_user_access_token(self):
+    def get_user_access_token(self, revoke=False):
         token_application_name = settings.APPLICATION_NAME
         user_access_token = UserAccessToken(self, self, token_application_name)
-        access_token = user_access_token.create_oauth_token()
-        access_token = access_token.token
-        self.last_login = timezone.now()
-        self.save()
-        return access_token
+        if revoke:
+            user_access_token.revoke_oauth_tokens()
+            return
+        else:
+            access_token = user_access_token.create_oauth_token()
+            access_token = access_token.token
+            self.last_login = timezone.now()
+            self.save()
+            return access_token
 
 
 class UserOtp(models.Model):
